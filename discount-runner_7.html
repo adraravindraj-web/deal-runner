@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discount Runner</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px 20px;
+}
+
+/* ── PLAYER BADGE (top-left) ── */
+#player-badge {
+  display: none;
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 200;
+  cursor: pointer;
+}
+
+#player-badge-inner {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 20px;
+  padding: 6px 14px 6px 8px;
+  color: white;
+  font-size: 13px; font-weight: 600;
+  transition: background 0.2s;
+}
+
+#player-badge-inner:hover { background: rgba(255,255,255,0.25); }
+
+.badge-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #ffcc00;
+  color: #2d1b69;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── PROFILE POPUP ── */
+#profile-popup {
+  display: none;
+  position: fixed;
+  top: 52px; left: 12px;
+  z-index: 199;
+  background: rgba(30,20,70,0.97);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 16px;
+  padding: 20px;
+  min-width: 220px;
+  color: white;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+
+#profile-popup.open { display: block; }
+
+.profile-name {
+  font-size: 15px; font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.profile-email {
+  font-size: 11px; opacity: 0.6;
+  margin-bottom: 14px;
+}
+
+.profile-stats {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.profile-stat {
+  background: rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.profile-stat-num {
+  font-size: 22px; font-weight: 700;
+  color: #ffcc00;
+  line-height: 1;
+}
+
+.profile-stat-lbl {
+  font-size: 10px; opacity: 0.65;
+  margin-top: 3px;
+}
+
+.profile-close {
+  margin-top: 14px; width: 100%;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  color: white; font-family: 'Poppins', sans-serif;
+  font-size: 12px; padding: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.profile-close:hover { background: rgba(255,255,255,0.2); }
+
+/* ── SCREENS ── */
+.screen { display: none; width: 100%; max-width: 420px; }
+.screen.active { display: block; }
+
+/* ── CARD ── */
+.card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 24px;
+  padding: 36px 32px;
+  color: white;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.card-title {
+  font-size: 26px; font-weight: 700;
+  margin-bottom: 6px; text-align: center;
+}
+
+.card-sub {
+  font-size: 13px; opacity: 0.7;
+  text-align: center; margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+/* ── FORM ── */
+.form-group { margin-bottom: 16px; }
+
+label {
+  display: block;
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+  margin-bottom: 6px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="url"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px 16px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 12px;
+  color: white;
+  outline: none;
+  transition: border 0.2s, background 0.2s;
+}
+
+input::placeholder { color: rgba(255,255,255,0.4); }
+input:focus {
+  border-color: #ffcc00;
+  background: rgba(255,255,255,0.18);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── PRODUCT LINK BOX ── */
+.product-box {
+  background: rgba(255,255,255,0.1);
+  border: 1px dashed rgba(255,255,255,0.3);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-icon { font-size: 28px; }
+
+.product-info { flex: 1; min-width: 0; }
+
+.product-name {
+  font-size: 13px; font-weight: 600;
+  white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-link-text {
+  font-size: 11px; opacity: 0.6;
+  white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  width: 100%;
+  padding: 14px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px; font-weight: 600;
+  border: none; border-radius: 14px;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+  margin-top: 8px;
+}
+
+.btn:hover { transform: translateY(-2px); opacity: 0.92; }
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: #ffcc00;
+  color: #2d1b69;
+}
+
+.btn-secondary {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.25);
+}
+
+.error-msg {
+  font-size: 12px; color: #ff8080;
+  margin-top: -8px; margin-bottom: 8px;
+  display: none;
+}
+
+/* ── GAME SCREEN ── */
+#screen-game {
+  max-width: 380px;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.game-stat {
+  background: rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px; font-weight: 600;
+  text-align: center;
+}
+
+.game-stat span {
+  display: block;
+  font-size: 10px; font-weight: 400;
+  opacity: 0.7;
+  margin-bottom: 2px;
+}
+
+.game-arena {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+
+/* Lane lines */
+.game-arena::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.03) 100%),
+    repeating-linear-gradient(90deg, transparent, transparent calc(33.3% - 1px), rgba(255,255,255,0.06) calc(33.3% - 1px), rgba(255,255,255,0.06) 33.3%);
+  pointer-events: none;
+}
+
+.player {
+  position: absolute;
+  bottom: 14px;
+  font-size: 34px;
+  transition: left 0.15s cubic-bezier(0.25,0.46,0.45,0.94);
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.8));
+  z-index: 10;
+}
+
+.item {
+  position: absolute;
+  font-size: 26px;
+  animation: fall linear forwards;
+  z-index: 5;
+}
+
+@keyframes fall {
+  from { top: -40px; }
+  to { top: 440px; }
+}
+
+.game-instructions {
+  text-align: center;
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+/* Mobile touch buttons */
+.touch-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.touch-btn {
+  flex: 1;
+  padding: 14px;
+  font-size: 22px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 14px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.touch-btn:active { background: rgba(255,255,255,0.25); }
+
+/* Progress bar */
+.progress-wrap {
+  margin-top: 10px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #ffcc00, #ff9500);
+  border-radius: 8px;
+  transition: width 0.3s;
+  width: 0%;
+}
+
+/* ── RESULT SCREEN ── */
+.result-emoji { font-size: 64px; text-align: center; margin-bottom: 12px; }
+
+.coupon-box {
+  background: rgba(255,204,0,0.12);
+  border: 2px dashed rgba(255,204,0,0.6);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  margin: 20px 0;
+  position: relative;
+}
+
+.coupon-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase;
+  opacity: 0.7; margin-bottom: 8px;
+}
+
+.coupon-code {
+  font-size: 32px; font-weight: 700;
+  color: #ffcc00;
+  letter-spacing: 4px;
+}
+
+.coupon-value {
+  font-size: 13px; opacity: 0.75;
+  margin-top: 6px;
+}
+
+.coupon-tag {
+  position: absolute;
+  top: -10px; left: 50%;
+  transform: translateX(-50%);
+  background: #ffcc00;
+  color: #2d1b69;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 3px 12px;
+  border-radius: 20px;
+}
+
+.product-apply-box {
+  background: rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.apply-info { flex: 1; }
+.apply-title { font-size: 13px; font-weight: 600; }
+.apply-desc { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+
+.copy-btn {
+  background: rgba(255,204,0,0.2);
+  border: 1px solid rgba(255,204,0,0.4);
+  border-radius: 8px;
+  color: #ffcc00;
+  font-family: 'Poppins', sans-serif;
+  font-size: 11px; font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.copy-btn:hover { background: rgba(255,204,0,0.3); }
+
+.expiry-note {
+  font-size: 11px; opacity: 0.55;
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* ── LOSE SCREEN ── */
+.lose-emoji { font-size: 64px; text-align: center; margin-bottom: 12px; }
+
+.score-summary {
+  background: rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 16px;
+  margin: 16px 0;
+  display: flex;
+  justify-content: space-around;
+}
+
+.score-item { text-align: center; }
+.score-num {
+  font-size: 26px; font-weight: 700;
+  color: #ffcc00;
+}
+.score-lbl {
+  font-size: 11px; opacity: 0.6;
+  margin-top: 2px;
+}
+
+/* ── DIVIDER ── */
+.divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 16px 0;
+  opacity: 0.4;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1;
+  height: 1px; background: white;
+}
+.divider span { font-size: 11px; }
+
+/* Countdown overlay */
+.countdown-overlay {
+  position: absolute; inset: 0;
+  background: rgba(15,12,41,0.85);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 50;
+  border-radius: 20px;
+}
+
+.countdown-num {
+  font-size: 96px; font-weight: 700;
+  color: #ffcc00;
+  animation: pop 0.4s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.countdown-text {
+  font-size: 15px; opacity: 0.7;
+  margin-top: 8px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ── TOP BRAND HEADER ── -->
+<div style="position:fixed; top:0; left:0; right:0; z-index:100; text-align:center; padding:10px 0; background: rgba(0,0,0,0.25); backdrop-filter: blur(8px);">
+  <span style="font-family:'Poppins',sans-serif; font-size:20px; font-weight:700; letter-spacing:3px; color:#ffcc00; text-shadow:0 0 20px rgba(255,204,0,0.4);">DEALRUNNER</span>
+</div>
+
+<!-- ── PLAYER BADGE ── -->
+<div id="player-badge" onclick="toggleProfile()">
+  <div id="player-badge-inner">
+    <div class="badge-avatar" id="badge-initials">?</div>
+    <span id="badge-name">Player</span>
+  </div>
+</div>
+
+<!-- ── PROFILE POPUP ── -->
+<div id="profile-popup">
+  <div class="profile-name" id="popup-name">—</div>
+  <div class="profile-email" id="popup-email">—</div>
+  <div class="profile-stats">
+    <div class="profile-stat">
+      <div class="profile-stat-num" id="popup-plays">0</div>
+      <div class="profile-stat-lbl">Games Played</div>
+    </div>
+    <div class="profile-stat">
+      <div class="profile-stat-num" id="popup-best">0%</div>
+      <div class="profile-stat-lbl">Best Score</div>
+    </div>
+  </div>
+  <button class="profile-close" onclick="toggleProfile()">Close</button>
+</div>
+
+<!-- ══ SCREEN 1: LOGIN ══ -->
+<div class="screen active" id="screen-login">
+  <div class="card">
+    <div class="card-title" style="font-size:22px; letter-spacing:1px;">Welcome to <span style="color:#ffcc00; font-weight:700; letter-spacing:3px;">DEALRUNNER</span></div>
+    <div class="card-sub">Fill in your details, paste a product link & play to win real discounts!</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>First Name</label>
+        <input type="text" id="fname" placeholder="Ravi" />
+      </div>
+      <div class="form-group">
+        <label>Last Name</label>
+        <input type="text" id="lname" placeholder="Kumar" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="email" placeholder="you@example.com" />
+    </div>
+
+    <div class="form-group">
+      <label>Mobile Number</label>
+      <input type="tel" id="phone" placeholder="+91 98765 43210" />
+    </div>
+
+    <div class="form-group">
+      <label>Paste Your Product Link</label>
+      <input type="url" id="product-url" placeholder="https://www.amazon.in/product/..." />
+      <div class="error-msg" id="url-error">Please enter a valid product URL</div>
+    </div>
+
+    <div class="product-box" id="product-preview" style="display:none;">
+      <div class="product-icon">🛒</div>
+      <div class="product-info">
+        <div class="product-name" id="preview-name">Your Product</div>
+        <div class="product-link-text" id="preview-url"></div>
+      </div>
+    </div>
+
+    <div class="divider"><span>How it works</span></div>
+    <div style="font-size:12px; opacity:0.65; line-height:1.8; margin-bottom:16px;">
+      🎮 Play the game &nbsp;→&nbsp; 🪙 Catch coins & coupons &nbsp;→&nbsp; 🏆 Win to unlock 5–10% off your product
+    </div>
+
+    <p class="error-msg" id="login-error" style="display:none; text-align:center;">Please fill in all fields correctly.</p>
+    <button class="btn btn-primary" onclick="handleLogin()">Continue to Game ▶</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN 2: GAME ══ -->
+<div class="screen" id="screen-game">
+  <div class="game-header">
+    <div class="game-stat"><span>🪙 Coins</span><span id="stat-coins">0%</span></div>
+    <div class="game-stat"><span>🎟️ Coupons</span><span id="stat-discount">0%</span></div>
+    <div class="game-stat"><span>⏱️ Time</span><span id="stat-time">30s</span></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+
+  <div class="game-arena" id="game">
+    <div class="player" id="player">
+      <svg width="34" height="42" viewBox="0 0 34 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Head -->
+        <circle cx="17" cy="6" r="5.5" fill="#e53935"/>
+        <!-- Body -->
+        <rect x="11" y="13" width="12" height="14" rx="4" fill="#e53935"/>
+        <!-- Left arm -->
+        <rect x="4" y="14" width="8" height="3.5" rx="1.75" fill="#e53935"/>
+        <!-- Right arm -->
+        <rect x="22" y="14" width="8" height="3.5" rx="1.75" fill="#e53935"/>
+        <!-- Left leg -->
+        <rect x="11" y="25" width="4.5" height="13" rx="2.25" fill="#e53935"/>
+        <!-- Right leg -->
+        <rect x="18.5" y="25" width="4.5" height="13" rx="2.25" fill="#e53935"/>
+      </svg>
+    </div>
+    <div class="countdown-overlay" id="countdown-overlay">
+      <div class="countdown-num" id="countdown-num">3</div>
+      <div class="countdown-text">Get ready!</div>
+    </div>
+  </div>
+
+  <div class="touch-controls">
+    <button class="touch-btn" id="btn-left" ontouchstart="movePlayer(-1)" onclick="movePlayer(-1)">◀</button>
+    <button class="touch-btn" id="btn-right" ontouchstart="movePlayer(1)" onclick="movePlayer(1)">▶</button>
+  </div>
+
+  <div class="game-instructions">⌨️ Arrow keys or tap buttons to move &nbsp;|&nbsp; 🪙 +1% &nbsp;🎟️ +0.5% &nbsp;❌ -1% &nbsp;|&nbsp; 30 seconds!</div>
+</div>
+
+<!-- ══ SCREEN 3: WIN ══ -->
+<div class="screen" id="screen-win">
+  <div class="card">
+    <div class="result-emoji">🏆</div>
+    <div class="card-title">You Won!</div>
+    <div class="card-sub">Great game, <span id="win-name">Player</span>! Here's your exclusive discount coupon.</div>
+
+    <div class="coupon-box">
+      <div class="coupon-tag">Your Coupon</div>
+      <div class="coupon-label">Discount Code</div>
+      <div class="coupon-code" id="coupon-code">DR5OFF</div>
+      <div class="coupon-value" id="coupon-value">5% off on your product</div>
+    </div>
+
+    <div class="product-apply-box">
+      <div style="font-size:26px;">🛒</div>
+      <div class="apply-info">
+        <div class="apply-title">Apply on your product</div>
+        <div class="apply-desc" id="win-product-url">amazon.in/product/...</div>
+      </div>
+      <button class="copy-btn" onclick="copyCode()">Copy</button>
+    </div>
+
+    <div style="font-size:12px; opacity:0.65; line-height:1.8; margin-bottom:16px; background: rgba(255,255,255,0.07); border-radius:12px; padding:12px;">
+      📋 How to redeem:<br>
+      1. Open your product link above<br>
+      2. Add item to cart<br>
+      3. Paste the code at checkout<br>
+      4. Discount applies automatically
+    </div>
+
+    <div class="expiry-note">⏳ Valid for 24 hours · One-time use only</div>
+
+    <button class="btn btn-secondary" onclick="playAgain()" style="margin-top:16px;">🔄 Play Again</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN 4: LOSE ══ -->
+<div class="screen" id="screen-lose">
+  <div class="card">
+    <div class="lose-emoji">😔</div>
+    <div class="card-title">Better Luck Next Time!</div>
+    <div class="card-sub">You didn't reach 25% discount this round. Give it another shot!</div>
+
+    <div class="score-summary">
+      <div class="score-item">
+        <div class="score-num" id="lose-coins">0</div>
+        <div class="score-lbl">Coins</div>
+      </div>
+      <div class="score-item">
+        <div class="score-num" id="lose-discount">0%</div>
+        <div class="score-lbl">Discount</div>
+      </div>
+    </div>
+
+    <div style="font-size:12px; opacity:0.65; text-align:center; line-height:1.7; margin-bottom:16px;">
+      Tip: Stay in the middle lane — items fall equally across all 3 lanes. Avoid the ❌ red bombs!
+    </div>
+
+    <button class="btn btn-primary" onclick="playAgain()">🔄 Try Again</button>
+    <button class="btn btn-secondary" onclick="showScreen('screen-login')" style="margin-top:10px;">← Back to Login</button>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let playerLane = 1;
+let coins = 0;
+let coinPct = 0;
+let couponPct = 0;
+let gameInterval = null;
+let timerInterval = null;
+let timeLeft = 30;
+let gameRunning = false;
+let userData = {};
+let totalCoupons = 0;
+const MAX_COUPONS = 30;
+const WIN_TARGET = 15;
+const GAME_DURATION = 30;
+
+// ── SCREEN MANAGER ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── LOGIN ──
+document.getElementById('product-url').addEventListener('input', function() {
+  const val = this.value.trim();
+  const preview = document.getElementById('product-preview');
+  if (val.length > 10 && (val.startsWith('http://') || val.startsWith('https://'))) {
+    try {
+      const url = new URL(val);
+      document.getElementById('preview-name').textContent = url.hostname.replace('www.','') + ' — Product';
+      document.getElementById('preview-url').textContent = val.length > 50 ? val.substring(0,50)+'...' : val;
+      preview.style.display = 'flex';
+      document.getElementById('url-error').style.display = 'none';
+    } catch(e) {
+      preview.style.display = 'none';
+    }
+  } else {
+    preview.style.display = 'none';
+  }
+});
+
+function handleLogin() {
+  const fname = document.getElementById('fname').value.trim();
+  const lname = document.getElementById('lname').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const url   = document.getElementById('product-url').value.trim();
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const urlOk = url.startsWith('http') && url.length > 10;
+
+  if (!fname || !lname || !email || !phone || !url || !emailOk || !urlOk) {
+    document.getElementById('login-error').style.display = 'block';
+    if (!urlOk) document.getElementById('url-error').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('login-error').style.display = 'none';
+  userData = { name: fname, fullName: fname + ' ' + lname, email, phone, url };
+
+  // Save to localStorage
+  const saved = JSON.parse(localStorage.getItem('dealrunner_user') || '{}');
+  userData.plays = saved.plays || 0;
+  userData.best = saved.best || 0;
+  localStorage.setItem('dealrunner_user', JSON.stringify({
+    name: userData.name, fullName: userData.fullName,
+    email: userData.email, phone: userData.phone,
+    plays: userData.plays, best: userData.best
+  }));
+
+  updateBadge();
+  showScreen('screen-game');
+  startCountdown();
+}
+
+// ── BADGE & PROFILE ──
+function updateBadge() {
+  const badge = document.getElementById('player-badge');
+  const initials = (userData.name.charAt(0) + (userData.fullName.split(' ')[1] || '').charAt(0)).toUpperCase();
+  document.getElementById('badge-initials').textContent = initials;
+  document.getElementById('badge-name').textContent = userData.name;
+  badge.style.display = 'block';
+}
+
+function toggleProfile() {
+  const popup = document.getElementById('profile-popup');
+  const saved = JSON.parse(localStorage.getItem('dealrunner_user') || '{}');
+  document.getElementById('popup-name').textContent = saved.fullName || userData.fullName || '—';
+  document.getElementById('popup-email').textContent = saved.email || userData.email || '—';
+  document.getElementById('popup-plays').textContent = saved.plays || 0;
+  document.getElementById('popup-best').textContent = (saved.best || 0) + '%';
+  popup.classList.toggle('open');
+}
+function startCountdown() {
+  resetGameState();
+  const overlay = document.getElementById('countdown-overlay');
+  const numEl = document.getElementById('countdown-num');
+  overlay.style.display = 'flex';
+  let count = 3;
+  numEl.textContent = count;
+
+  const cd = setInterval(() => {
+    count--;
+    if (count === 0) {
+      numEl.textContent = 'GO!';
+    } else if (count < 0) {
+      clearInterval(cd);
+      overlay.style.display = 'none';
+      startGame();
+    } else {
+      numEl.textContent = count;
+      numEl.style.animation = 'none';
+      void numEl.offsetWidth;
+      numEl.style.animation = 'pop 0.4s ease';
+    }
+  }, 900);
+}
+
+// ── GAME ──
+function resetGameState() {
+  stopCollisionLoop();
+  coins = 0; coinPct = 0; couponPct = 0; playerLane = 1; timeLeft = GAME_DURATION; totalCoupons = 0;
+  document.getElementById('stat-coins').textContent = '0';
+  document.getElementById('stat-discount').textContent = '0%';
+  document.getElementById('stat-time').textContent = GAME_DURATION + 's';
+  document.getElementById('progress-bar').style.width = '0%';
+  document.getElementById('player').style.left = (1 * 33 + 10) + '%';
+  // clear old items
+  document.querySelectorAll('.item').forEach(i => i.remove());
+}
+
+function startGame() {
+  gameRunning = true;
+  // Spawn exactly 1 coupon per second for 30s
+  for (let i = 0; i < 30; i++) {
+    setTimeout(() => { if (gameRunning) spawnCoupon(); }, i * 1000 + 200);
+  }
+  // Spawn coins and bad items on their own interval
+  gameInterval = setInterval(spawnCoinOrBad, 700);
+  timerInterval = setInterval(tick, 1000);
+  startCollisionLoop();
+}
+
+function spawnCoupon() {
+  const game = document.getElementById('game');
+  const item = document.createElement('div');
+  item.classList.add('item');
+  const lane = Math.floor(Math.random() * 3);
+  let duration = 2.8;
+  if (timeLeft < 15) duration = 2.2;
+  if (timeLeft < 8) duration = 1.8;
+  item.textContent = '🎟️'; item.classList.add('coupon');
+  item.style.left = (lane * 33 + 10) + '%';
+  item.style.animationDuration = duration + 's';
+  item.dataset.lane = lane;
+  item.dataset.collected = 'false';
+  game.appendChild(item);
+  item.addEventListener('animationend', () => { if (item.parentNode) item.remove(); });
+}
+
+function spawnCoinOrBad() {
+  const game = document.getElementById('game');
+  const item = document.createElement('div');
+  item.classList.add('item');
+  const lane = Math.floor(Math.random() * 3);
+  let duration = 2.8;
+  if (timeLeft < 15) duration = 2.2;
+  if (timeLeft < 8) duration = 1.8;
+  if (Math.random() < 0.65) {
+    item.textContent = '🪙'; item.classList.add('coin');
+  } else {
+    item.textContent = '❌'; item.classList.add('bad');
+  }
+  item.style.left = (lane * 33 + 10) + '%';
+  item.style.animationDuration = duration + 's';
+  item.dataset.lane = lane;
+  item.dataset.collected = 'false';
+  game.appendChild(item);
+  item.addEventListener('animationend', () => { if (item.parentNode) item.remove(); });
+}
+
+function tick() {
+  timeLeft--;
+  document.getElementById('stat-time').textContent = timeLeft + 's';
+  if (timeLeft <= 0) endGame(false);
+}
+
+// ── PLAYER ──
+document.addEventListener('keydown', function(e) {
+  if (!gameRunning) return;
+  if (e.key === 'ArrowLeft') movePlayer(-1);
+  if (e.key === 'ArrowRight') movePlayer(1);
+});
+
+function movePlayer(dir) {
+  if (!gameRunning) return;
+  playerLane = Math.max(0, Math.min(2, playerLane + dir));
+  document.getElementById('player').style.left = (playerLane * 33 + 10) + '%';
+}
+
+// ── SPAWN ──
+function spawnItem() {
+  const game = document.getElementById('game');
+  const item = document.createElement('div');
+  item.classList.add('item');
+  const lane = Math.floor(Math.random() * 3);
+  const rand = Math.random();
+
+  let duration = 2.8;
+  if (timeLeft < 15) duration = 2.2;
+  if (timeLeft < 8) duration = 1.8;
+
+  if (rand < 0.45) {
+    item.textContent = '🪙'; item.classList.add('coin');
+  } else if (rand < 0.75) {
+    if (totalCoupons < MAX_COUPONS) {
+      item.textContent = '🎟️'; item.classList.add('coupon');
+      totalCoupons++;
+    } else {
+      item.textContent = '🪙'; item.classList.add('coin');
+    }
+  } else {
+    item.textContent = '❌'; item.classList.add('bad');
+  }
+
+  item.style.left = (lane * 33 + 10) + '%';
+  item.style.animationDuration = duration + 's';
+  item.dataset.lane = lane;
+  item.dataset.collected = 'false';
+  game.appendChild(item);
+
+  // auto-remove after animation ends (item passed through)
+  item.addEventListener('animationend', () => {
+    if (item.parentNode) item.remove();
+  });
+}
+
+// ── REAL-TIME COLLISION LOOP ──
+let collisionFrame = null;
+
+function startCollisionLoop() {
+  const game = document.getElementById('game');
+  const playerEl = document.getElementById('player');
+
+  function loop() {
+    if (!gameRunning) return;
+    const pRect = playerEl.getBoundingClientRect();
+
+    document.querySelectorAll('.item').forEach(item => {
+      if (item.dataset.collected === 'true') return;
+      const iRect = item.getBoundingClientRect();
+
+      const overlapX = pRect.left < iRect.right && pRect.right > iRect.left;
+      const overlapY = pRect.top < iRect.bottom && pRect.bottom > iRect.top;
+
+      if (overlapX && overlapY) {
+        item.dataset.collected = 'true';
+
+        if (item.classList.contains('coin'))   { coinPct = Math.min(15, coinPct + 1); coins++; }
+        if (item.classList.contains('coupon')) { couponPct = Math.min(15, couponPct + 0.5); }
+        if (item.classList.contains('bad'))    {
+          coinPct = Math.max(0, coinPct - 1);
+          couponPct = Math.max(0, couponPct - 1);
+        }
+
+        // pop & disappear
+        item.style.animation = 'none';
+        item.style.transition = 'transform 0.18s ease, opacity 0.18s ease';
+        item.style.transform = 'scale(1.6)';
+        item.style.opacity = '0';
+        setTimeout(() => { if (item.parentNode) item.remove(); }, 200);
+
+        updateUI();
+      }
+    });
+
+    collisionFrame = requestAnimationFrame(loop);
+  }
+
+  collisionFrame = requestAnimationFrame(loop);
+}
+
+function stopCollisionLoop() {
+  if (collisionFrame) { cancelAnimationFrame(collisionFrame); collisionFrame = null; }
+}
+
+function updateUI() {
+  document.getElementById('stat-coins').textContent = coinPct.toFixed(1) + '%';
+  document.getElementById('stat-discount').textContent = couponPct.toFixed(1) + '%';
+  const total = coinPct + couponPct;
+  const pct = Math.min((total / WIN_TARGET) * 100, 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function endGame(won) {
+  gameRunning = false;
+  clearInterval(gameInterval);
+  clearInterval(timerInterval);
+  stopCollisionLoop();
+  gameInterval = null; timerInterval = null;
+
+  // Save stats
+  const total = parseFloat(Math.min(15, coinPct + couponPct).toFixed(1));
+  const saved = JSON.parse(localStorage.getItem('dealrunner_user') || '{}');
+  saved.plays = (saved.plays || 0) + 1;
+  saved.best = Math.max(saved.best || 0, total);
+  saved.fullName = userData.fullName; saved.email = userData.email;
+  localStorage.setItem('dealrunner_user', JSON.stringify(saved));
+  userData.plays = saved.plays; userData.best = saved.best;
+
+  setTimeout(() => {
+    if ((coinPct + couponPct) > 0) showWin();
+    else showLose();
+  }, 400);
+}
+
+// ── WIN ──
+function showWin() {
+  const total = parseFloat(Math.min(15, coinPct + couponPct).toFixed(1));
+  const code = 'PLAY' + total + 'OFF';
+
+  document.getElementById('win-name').textContent = userData.name;
+  document.getElementById('coupon-code').textContent = code;
+  document.getElementById('coupon-value').textContent = total + '% off on your product';
+  const shortUrl = userData.url.length > 40 ? userData.url.substring(0,40)+'...' : userData.url;
+  document.getElementById('win-product-url').textContent = shortUrl;
+  document.getElementById('win-product-url').setAttribute('data-full-url', userData.url);
+
+  showScreen('screen-win');
+}
+
+function copyCode() {
+  const code = document.getElementById('coupon-code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied!';
+    btn.style.background = 'rgba(0,200,100,0.2)';
+    btn.style.borderColor = 'rgba(0,200,100,0.5)';
+    btn.style.color = '#00e676';
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.style.background = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }, 2000);
+  });
+}
+
+// ── LOSE ──
+function showLose() {
+  document.getElementById('lose-coins').textContent = coinPct.toFixed(1) + '%';
+  document.getElementById('lose-discount').textContent = couponPct.toFixed(1) + '%';
+  showScreen('screen-lose');
+}
+
+// ── REPLAY ──
+function playAgain() {
+  showScreen('screen-game');
+  startCountdown();
+}
+
+// ── ON LOAD: prefill if returning user ──
+window.addEventListener('load', () => {
+  const saved = JSON.parse(localStorage.getItem('dealrunner_user') || '{}');
+  if (saved.fullName) {
+    const parts = saved.fullName.split(' ');
+    document.getElementById('fname').value = parts[0] || '';
+    document.getElementById('lname').value = parts.slice(1).join(' ') || '';
+    document.getElementById('email').value = saved.email || '';
+    document.getElementById('phone').value = saved.phone || '';
+    userData = { name: parts[0], fullName: saved.fullName, email: saved.email, phone: saved.phone, url: '', plays: saved.plays || 0, best: saved.best || 0 };
+    updateBadge();
+  }
+});
+</script>
+</body>
+</html>
